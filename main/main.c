@@ -25,6 +25,8 @@
 #include <esp_wireguard.h>
 #include "sync_time.h"
 
+#include "task_monitor.h"
+
 #define EXAMPLE_ESP_WIFI_SSID      CONFIG_ESP_WIFI_SSID
 #define EXAMPLE_ESP_WIFI_PASS      CONFIG_ESP_WIFI_PASSWORD
 #define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
@@ -341,8 +343,11 @@ void start_ping()
     esp_ping_start(ping);
 }
 
+
+
 void app_main(void)
 {
+    // Initial setup
     esp_err_t err;
     time_t now;
     struct tm timeinfo;
@@ -384,6 +389,7 @@ void app_main(void)
         goto fail;
     }
 
+    // Waiting for peer to be up
     while (1) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         err = esp_wireguardif_peer_is_up(&ctx);
@@ -394,8 +400,14 @@ void app_main(void)
             ESP_LOGI(TAG, "Peer is down");
         }
     }
+
+    // Constantly pinging
     start_ping();
 
+    // Task Monitor
+    task_monitor();
+
+    // Connect and disconnect loop
     while (1) {
         vTaskDelay(1000 * 10 / portTICK_PERIOD_MS);
         ESP_LOGI(TAG, "Disconnecting.");
@@ -413,6 +425,7 @@ void app_main(void)
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
         ESP_LOGI(TAG, "Peer is up");
+
         esp_wireguard_set_default(&ctx);
     }
 
