@@ -25,6 +25,7 @@
 #include <esp_wireguard.h>
 #include "sync_time.h"
 
+// Task monitor addition
 #include "task_monitor.h"
 
 #define EXAMPLE_ESP_WIFI_SSID      CONFIG_ESP_WIFI_SSID

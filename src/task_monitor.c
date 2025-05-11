@@ -192,6 +192,8 @@ static void task_status_monitor_task(void *params)
                     YELLOW " %%)\n" RESET_COLOR, get_current_time_ms(),
                     heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT), get_minimum_heap_free_percent());
 
+                
+
                 printf("I (%lu) tm: " YELLOW "Total RunTime: " GREEN "%lu" YELLOW " µs (" GREEN "%lu" YELLOW
                     " seconds)\n" RESET_COLOR, get_current_time_ms(), total_run_time, total_run_time / 1000000);
 
