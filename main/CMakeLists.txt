@@ -9,5 +9,6 @@ idf_component_register(SRCS
                         esp_wifi 
                         lwip 
                         esp_wireguard 
-                        nvs_flash
+                        nvs_flash 
+                        esp_driver_tsens # Temp sensor
                     )
