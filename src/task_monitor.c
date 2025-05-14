@@ -168,15 +168,15 @@ static void task_status_monitor_task(void *params)
 
                 printf("I (%lu) tm: " BLUE "%-18.16s %-11.10s %-6.5s %-8.8s %-10.9s %-11.10s %-15.15s %-s"
                     RESET_COLOR,
-                    get_current_time_ms(),
-                    "TASK NAME:",
-                    "STATE:",
-                    "CORE:",
-                    "NUMBER:",
-                    "PRIORITY:",
-                    "STACK_MIN:",
-                    "RUNTIME, µs:",
-                    "RUNTIME, %:\n"
+                    get_current_time_ms(),  
+                    "TASK NAME:",           
+                    "STATE:",               
+                    "CORE:",                
+                    "NUMBER:",              
+                    "PRIORITY:",            
+                    "STACK_MIN:",           
+                    "RUNTIME, µs:",         
+                    "RUNTIME, %:\n"         
                 );
 
                 for (size_t i = 0; i < number_of_tasks; ++i) {
@@ -202,11 +202,11 @@ static void task_status_monitor_task(void *params)
 
                 // Get Temperature
                 ESP_ERROR_CHECK(temperature_sensor_get_celsius(temp_sensor, &tsens_value));
-                ESP_LOGI(TAG, "Temperature value %.02f ℃", tsens_value);
-                vTaskDelay(pdMS_TO_TICKS(1000));
+                ESP_LOGI(TAG, "Temperature value %.02f °C", tsens_value);
 
-
-                printf("I (%lu) tm: " YELLOW "Total heap free size:   " GREEN "%d" YELLOW " bytes\n" RESET_COLOR,
+                
+                // printf("I (%lu) tm: " YELLOW "Total heap free size:   " GREEN "%d" YELLOW " bytes\n" RESET_COLOR,
+                printf("I (%lu) tm: " YELLOW "Total heap size:        " GREEN "%d" YELLOW " bytes\n" RESET_COLOR,
                     get_current_time_ms(), heap_caps_get_total_size(MALLOC_CAP_DEFAULT));
 
                 printf("I (%lu) tm: " YELLOW "Current heap free size: " GREEN "%d" YELLOW " bytes (" GREEN "%.2f"

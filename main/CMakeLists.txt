@@ -2,6 +2,7 @@ idf_component_register(SRCS
                         "main.c" 
                         "sync_time.c"
                         "../src/task_monitor.c"
+                        "../src/network_test.c"
                     INCLUDE_DIRS 
                         "."
                         "../include"
