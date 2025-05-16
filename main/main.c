@@ -348,7 +348,7 @@ void start_ping()
 
 void app_main(void)
 {
-    // Initial setup
+    // Initial Setup
     esp_err_t err;
     time_t now;
     struct tm timeinfo;
