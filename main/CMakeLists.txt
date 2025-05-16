@@ -1,11 +1,10 @@
 idf_component_register(SRCS 
                         "main.c" 
                         "sync_time.c"
-                        "../src/task_monitor.c"
-                        "../src/network_test.c"
+                        "../components/ESP32_Task_Monitor/src/task_monitor.c"
                     INCLUDE_DIRS 
                         "."
-                        "../include"
+                        "../components/ESP32_Task_Monitor/include"
                     REQUIRES 
                         esp_wifi 
                         lwip 
