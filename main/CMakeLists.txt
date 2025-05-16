@@ -2,7 +2,7 @@ idf_component_register(SRCS
                         "main.c" 
                         "sync_time.c"
                         "../components/ESP32_Task_Monitor/src/task_monitor.c"
-                    INCLUDE_DIRS 
+                        INCLUDE_DIRS 
                         "."
                         "../components/ESP32_Task_Monitor/include"
                     REQUIRES 
