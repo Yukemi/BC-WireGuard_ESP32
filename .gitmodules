@@ -1,0 +1,3 @@
+[submodule "components/iperf"]
+	path = components/iperf
+	url = https://github.com/espressif/iperf-cmd

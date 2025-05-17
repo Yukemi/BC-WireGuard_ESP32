@@ -1,14 +1,4 @@
 dependencies:
-  espressif/iperf:
-    component_hash: d2612130967a5384fe517cc41c27bae8cf71a16a91df98a3610b48e6888ec359
-    dependencies:
-    - name: idf
-      require: private
-      version: '>=4.3'
-    source:
-      registry_url: https://components.espressif.com/
-      type: service
-    version: 0.1.3
   idf:
     source:
       type: idf
@@ -21,9 +11,8 @@ dependencies:
       type: service
     version: 0.9.0
 direct_dependencies:
-- espressif/iperf
 - idf
 - trombik/esp_wireguard
-manifest_hash: 48ef00f3ee1bcc804f7359ddb09e6ae3a3a2bd00c0f2e59ba691d7cd4edd5cd7
+manifest_hash: 1f7a28cd4ebad95149840857667bea41d608585418c50c0a78adb1d8d9d7cc54
 target: esp32s3
 version: 2.0.0
