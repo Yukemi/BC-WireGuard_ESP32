@@ -1,10 +1,6 @@
 dependencies:
-  idf:
-    source:
-      type: idf
-    version: 5.4.0
-  joltwallet/littlefs:
-    component_hash: 362f1f5beb5087b0c60169aff82676d2d0ffc991ead975212b0cba95959181c5
+  espressif/iperf:
+    component_hash: d2612130967a5384fe517cc41c27bae8cf71a16a91df98a3610b48e6888ec359
     dependencies:
     - name: idf
       require: private
@@ -12,7 +8,11 @@ dependencies:
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.14.8
+    version: 0.1.3
+  idf:
+    source:
+      type: idf
+    version: 5.4.0
   trombik/esp_wireguard:
     component_hash: 06b514516c241f27493b7589d3d4a79f424713609891168e4e65f529f1980922
     dependencies: []
@@ -21,9 +21,9 @@ dependencies:
       type: service
     version: 0.9.0
 direct_dependencies:
+- espressif/iperf
 - idf
-- joltwallet/littlefs
 - trombik/esp_wireguard
-manifest_hash: 86f04001d2d6f7dfb3e34a0b2828132f8c340fc80ca306aa4a674dd199a81d45
+manifest_hash: 48ef00f3ee1bcc804f7359ddb09e6ae3a3a2bd00c0f2e59ba691d7cd4edd5cd7
 target: esp32s3
 version: 2.0.0
