@@ -253,7 +253,7 @@ static esp_err_t wifi_init_netif(void)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
     ESP_ERROR_CHECK(esp_wifi_start() );
-
+    
     /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
      * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
     EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
@@ -286,7 +286,8 @@ static esp_err_t wifi_init_netif(void)
         ESP_LOGE(TAG, "esp_event_handler_instance_unregister: %s", esp_err_to_name(err));
         goto fail;
     }
-    vEventGroupDelete(s_wifi_event_group);
+    /* Messes with iperf */
+    // vEventGroupDelete(s_wifi_event_group);
 
     err = ESP_OK;
 fail:
@@ -406,6 +407,13 @@ static void start_iperf_server()
 /* iperf RTOS task */
 static void iperf_server_task(void *pvParameters)
 {
+    /* Check for s_wifi_event_group */
+    if (s_wifi_event_group == NULL) {
+        ESP_LOGE(TAG, "Event group not initialized");
+        vTaskDelete(NULL);
+        return;
+    }
+
     // Wait for WiFi connection.
     EventBits_t bits = xEventGroupWaitBits(
         s_wifi_event_group,
@@ -422,8 +430,6 @@ static void iperf_server_task(void *pvParameters)
         ESP_LOGE(TAG, "iperf failed to connect to WiFi");
     }
 
-    // Delete when iperf is terminated.
-    vEventGroupDelete(s_wifi_event_group);
     vTaskDelete(NULL);
 }
 
@@ -451,12 +457,16 @@ void app_main(void)
     ESP_ERROR_CHECK(err);
 
 
-    /* iperf initialization */
-    /* declared before wifi init to avoid crashing*/
-    xTaskCreate(iperf_server_task, "iperf_server", 4096, NULL, 5, NULL);
     
     /* iperf hook registration (delete if not working) */
     // iperf_register_hook_func(iperf_hook_func);
+
+    /* Create s_wifi_event_group before working with it */
+    s_wifi_event_group = xEventGroupCreate();
+    configASSERT(s_wifi_event_group != NULL);
+    ESP_LOGI(TAG, "Event group handle created ");
+    ESP_LOGI(TAG, "Event group handle: %p", s_wifi_event_group);
+
 
 
     err = wifi_init_sta();
@@ -464,6 +474,9 @@ void app_main(void)
         ESP_LOGE(TAG, "wifi_init_sta: %s", esp_err_to_name(err));
         goto fail;
     }
+
+    /* iperf initialization */
+    xTaskCreate(iperf_server_task, "iperf_server", 4096, NULL, 5, NULL);
 
 
     obtain_time();
