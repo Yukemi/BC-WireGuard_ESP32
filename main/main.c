@@ -464,7 +464,7 @@ void app_main(void)
     /* Create s_wifi_event_group before working with it */
     s_wifi_event_group = xEventGroupCreate();
     configASSERT(s_wifi_event_group != NULL);
-    ESP_LOGI(TAG, "Event group handle created ");
+    ESP_LOGI(TAG, "Event group handle created");
     ESP_LOGI(TAG, "Event group handle: %p", s_wifi_event_group);
 
 
@@ -476,7 +476,7 @@ void app_main(void)
     }
 
     /* iperf initialization */
-    xTaskCreate(iperf_server_task, "iperf_server", 4096, NULL, 5, NULL);
+    xTaskCreate(iperf_server_task, "iperf_server", 4096, NULL, 1, NULL);
 
 
     obtain_time();
@@ -513,6 +513,11 @@ void app_main(void)
 
     /* Task Monitor */
     task_monitor();
+
+    /* Endless loop to avoid crashing */
+    while (1) {
+        vTaskDelay(1000 * 10 / portTICK_PERIOD_MS);
+    }
 
     
     // Connect and disconnect loop
