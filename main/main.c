@@ -30,9 +30,8 @@
 /* Task monitor */
 #include "task_monitor.h"
 
-/* iperf */
+/* Iperf */
 #include "iperf.h"
-#include "iperf_console.h"
 
 
 #define EXAMPLE_ESP_WIFI_SSID      CONFIG_ESP_WIFI_SSID
@@ -60,10 +59,21 @@ static const char *TAG = "demo";
 static int s_retry_num = 0;
 static wireguard_config_t wg_config = ESP_WIREGUARD_CONFIG_DEFAULT();
 
-/* Iperf Global Vars*/
-static bool wg_connected = false;
-static ip_addr_t wg_local_ip;
-static ip_addr_t sta_ip;
+/* WireGuard definitions */
+static esp_err_t wireguard_setup(wireguard_ctx_t* ctx);
+static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
+static esp_err_t wifi_init_sta(void);
+
+/* Ping test definitions */
+static void test_on_ping_success(esp_ping_handle_t hdl, void *args);
+static void test_on_ping_timeout(esp_ping_handle_t hdl, void *args);
+static void test_on_ping_end(esp_ping_handle_t hdl, void *args);
+void start_ping();
+
+/* Iperf definitions*/
+// static void iperf_hook_func(iperf_traffic_type_t type, iperf_status_t status);
+static void start_iperf_server(void);
+static void iperf_server_task(void *pvParameters);
 
 static esp_err_t wireguard_setup(wireguard_ctx_t* ctx)
 {
@@ -97,25 +107,13 @@ static esp_err_t wireguard_setup(wireguard_ctx_t* ctx)
         goto fail;
     }
 
-    /* Iperf capture WG IP */
-    err = esp_wireguard_get_ip(ctx, &wg_local_ip);
-    ESP_LOGI(TAG, "WireGuard IP: " IPSTR, IP2STR(&wg_local_ip));
 
     err = ESP_OK;
 fail:
     return err;
 }
 
-/* Iperf handler */
-static int iperf_cmd(int argc, char **argv)
-{
-    if (wg_connected)
-    {
-        argv[argc++] = "-B";
-        argv[argc++] = ipaddr_ntoa(&wg_local_ip);
-    }
-    return iperf_main(argc, argv);
-}
+
 
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
@@ -200,7 +198,7 @@ static esp_err_t wifi_init_tcpip_adaptor(void)
 
     ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler));
     ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler));
-    vEventGroupDelete(s_wifi_event_group);
+    // vEventGroupDelete(s_wifi_event_group);
 
     err = ESP_OK;
 fail:
@@ -371,24 +369,63 @@ void start_ping()
     esp_ping_start(ping);
 }
 
-/* Iperf performance tests */
-void run_performance_tests()
+/* iperf status callbacks (delete if not working) */
+// static void iperf_hook_func(iperf_traffic_type_t type, iperf_status_t status)
+// {
+//     if (status == IPERF_STARTED) {
+//         ESP_LOGI(TAG, "iperf server started",
+//             type == IPERF_TCP_SERVER ? "TCP server" :
+//             type == IPERF_UDP_SERVER ? "UDP server" : "client"
+//         );
+//     } else if (status == IPERF_STOPPED) {
+//         ESP_LOGI(TAG, "iperf server stopped",
+//             type == IPERF_TCP_SERVER ? "TCP server" :
+//             type == IPERF_UDP_SERVER ? "UDP server" : "client"
+//         );
+//     }
+// }
+
+/* iperf server */
+static void start_iperf_server()
 {
-    /* Iperf baseline */
-    ESP_LOGI(TAG, "Starting baseline WiFi test");
-    char *args_wifi[] = {"iperf", "-s", "i", "3", "-t", "30"};
-    iperf_cmd(6, args_wifi);
-    
-    vTaskDelay(pdMS_TO_TICKS(5000));
-    
-    /* Iperf WireGuard */
-    ESP_LOGI(TAG, "Starting WireGuard WiFi test");
-    char *args_wifi[] = {"iperf", "-s", "i", "3", "-t", "30"};
-    wg_connected = true;
-    iperf_cmd(6, args_wifi);
-    wg_connected = false;
+    ESP_LOGI(TAG, "Starting iperf server");
+
+    iperf_cfg_t iperf_cfg = {
+        .type = IPERF_IP_TYPE_IPV4,
+        .flag = IPERF_FLAG_SERVER,
+        .source_ip4 = 0,
+        .sport = 5001,
+        .dport = 5001,
+        .interval = 3,
+        .time = 0,
+    };
+
+    ESP_ERROR_CHECK(iperf_start(&iperf_cfg));
 }
 
+/* iperf RTOS task */
+static void iperf_server_task(void *pvParameters)
+{
+    // Wait for WiFi connection.
+    EventBits_t bits = xEventGroupWaitBits(
+        s_wifi_event_group,
+        WIFI_CONNECTED_BIT,
+        pdFALSE,
+        pdFALSE,
+        portMAX_DELAY
+    );
+
+    if (bits & WIFI_CONNECTED_BIT) {
+        start_iperf_server();
+        while (1) {vTaskDelay(portMAX_DELAY);}
+    } else {
+        ESP_LOGE(TAG, "iperf failed to connect to WiFi");
+    }
+
+    // Delete when iperf is terminated.
+    vEventGroupDelete(s_wifi_event_group);
+    vTaskDelete(NULL);
+}
 
 void app_main(void)
 {
@@ -413,11 +450,21 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(err);
 
+
+    /* iperf initialization */
+    /* declared before wifi init to avoid crashing*/
+    xTaskCreate(iperf_server_task, "iperf_server", 4096, NULL, 5, NULL);
+    
+    /* iperf hook registration (delete if not working) */
+    // iperf_register_hook_func(iperf_hook_func);
+
+
     err = wifi_init_sta();
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "wifi_init_sta: %s", esp_err_to_name(err));
         goto fail;
     }
+
 
     obtain_time();
     time(&now);
@@ -434,21 +481,7 @@ void app_main(void)
         goto fail;
     }
 
-    /* Iperf Register commands */
 
-    iperf_console_register();
-    esp_console_cmd_t iperf_cmd_struct = {
-        .command = "iperf",
-        .help = "iperf with WireGuard binding",
-        .hint = NULL,
-        .func = &iperf_cmd,
-    };
-    esp_console_cmd_register(&iperf_cmd_struct);
-
-    /* iperf Store STA IP */
-    esp_netif_ip_info_t ip_info;
-    esp_netif_get_ip_info(esp_netif_handle_from_ifkey("WIFI_STA_DEF"), &ip_info);
-    sta_ip = ip_info.ip;
 
     // Waiting for peer to be up
     while (1) {
@@ -489,9 +522,6 @@ void app_main(void)
         ESP_LOGI(TAG, "Peer is up");
         
         esp_wireguard_set_default(&ctx);
-        
-        /* Iperf testing */
-        run_performance_tests();
     }
 
 fail:
