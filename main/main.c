@@ -59,6 +59,7 @@ static const char *TAG = "demo";
 static int s_retry_num = 0;
 static wireguard_config_t wg_config = ESP_WIREGUARD_CONFIG_DEFAULT();
 
+
 /* WireGuard definitions */
 static esp_err_t wireguard_setup(wireguard_ctx_t* ctx);
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
@@ -74,6 +75,7 @@ void start_ping();
 // static void iperf_hook_func(iperf_traffic_type_t type, iperf_status_t status);
 static void start_iperf_server(void);
 static void iperf_server_task(void *pvParameters);
+
 
 static esp_err_t wireguard_setup(wireguard_ctx_t* ctx)
 {
@@ -370,21 +372,7 @@ void start_ping()
     esp_ping_start(ping);
 }
 
-/* iperf status callbacks (delete if not working) */
-// static void iperf_hook_func(iperf_traffic_type_t type, iperf_status_t status)
-// {
-//     if (status == IPERF_STARTED) {
-//         ESP_LOGI(TAG, "iperf server started",
-//             type == IPERF_TCP_SERVER ? "TCP server" :
-//             type == IPERF_UDP_SERVER ? "UDP server" : "client"
-//         );
-//     } else if (status == IPERF_STOPPED) {
-//         ESP_LOGI(TAG, "iperf server stopped",
-//             type == IPERF_TCP_SERVER ? "TCP server" :
-//             type == IPERF_UDP_SERVER ? "UDP server" : "client"
-//         );
-//     }
-// }
+
 
 /* iperf server */
 static void start_iperf_server()
@@ -395,10 +383,11 @@ static void start_iperf_server()
         .type = IPERF_IP_TYPE_IPV4,
         .flag = IPERF_FLAG_SERVER,
         .source_ip4 = 0,
-        .sport = 5001,
-        .dport = 5001,
+        .sport = 5201,
+        .dport = 5201,
+        .len_send_buf = 16384,
         .interval = 3,
-        .time = 0,
+        .time = 600,
     };
 
     ESP_ERROR_CHECK(iperf_start(&iperf_cfg));
@@ -457,9 +446,6 @@ void app_main(void)
     ESP_ERROR_CHECK(err);
 
 
-    
-    /* iperf hook registration (delete if not working) */
-    // iperf_register_hook_func(iperf_hook_func);
 
     /* Create s_wifi_event_group before working with it */
     s_wifi_event_group = xEventGroupCreate();
@@ -476,7 +462,7 @@ void app_main(void)
     }
 
     /* iperf initialization */
-    xTaskCreate(iperf_server_task, "iperf_server", 4096, NULL, 1, NULL);
+    xTaskCreate(iperf_server_task, "iperf_server", 4096, NULL, 3, NULL);
 
 
     obtain_time();
@@ -520,7 +506,7 @@ void app_main(void)
     }
 
     
-    // Connect and disconnect loop
+    /* Old connect and disconnect loop */
     while (1) {
         vTaskDelay(1000 * 10 / portTICK_PERIOD_MS);
         ESP_LOGI(TAG, "Disconnecting.");

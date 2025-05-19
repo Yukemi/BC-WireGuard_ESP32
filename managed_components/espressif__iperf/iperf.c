@@ -252,7 +252,9 @@ static esp_err_t iperf_run_tcp_server(void)
     int opt = 1;
     int err = 0;
     esp_err_t ret = ESP_OK;
+
     struct timeval timeout = { 0 };
+
     socklen_t addr_len = sizeof(struct sockaddr);
     struct sockaddr_storage listen_addr = { 0 };
 #if IPERF_IPV4_ENABLED
@@ -609,6 +611,11 @@ static uint32_t iperf_get_buffer_len(void)
 esp_err_t iperf_start(iperf_cfg_t *cfg)
 {
     BaseType_t ret;
+
+    /* iperf reuse of sockets */
+    int opt = 1;
+    setsockopt(tcp_listen_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(tcp_listen_socket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
 
     if (!cfg) {
         return ESP_FAIL;
