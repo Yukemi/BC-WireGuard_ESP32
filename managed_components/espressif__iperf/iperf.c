@@ -612,11 +612,6 @@ esp_err_t iperf_start(iperf_cfg_t *cfg)
 {
     BaseType_t ret;
 
-    /* iperf reuse of sockets */
-    int opt = 1;
-    setsockopt(tcp_listen_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    setsockopt(tcp_listen_socket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
-
     if (!cfg) {
         return ESP_FAIL;
     }

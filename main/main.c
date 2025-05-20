@@ -72,10 +72,8 @@ static void test_on_ping_end(esp_ping_handle_t hdl, void *args);
 void start_ping();
 
 /* Iperf definitions*/
-// static void iperf_hook_func(iperf_traffic_type_t type, iperf_status_t status);
 static void start_iperf_server(void);
 static void iperf_server_task(void *pvParameters);
-
 
 static esp_err_t wireguard_setup(wireguard_ctx_t* ctx)
 {
@@ -372,8 +370,6 @@ void start_ping()
     esp_ping_start(ping);
 }
 
-
-
 /* iperf server */
 static void start_iperf_server()
 {
@@ -414,7 +410,15 @@ static void iperf_server_task(void *pvParameters)
 
     if (bits & WIFI_CONNECTED_BIT) {
         start_iperf_server();
-        while (1) {vTaskDelay(portMAX_DELAY);}
+        while (1) {
+            vTaskDelay(1000 * 60 / portTICK_PERIOD_MS);
+            ESP_LOGI(TAG, "Stopping Iperf");
+            iperf_stop();
+            // vTaskDelay(portMAX_DELAY);
+            vTaskDelay(1000 * 1 / portTICK_PERIOD_MS);
+            ESP_LOGI(TAG, "Starting Iperf");
+            start_iperf_server();
+        }
     } else {
         ESP_LOGE(TAG, "iperf failed to connect to WiFi");
     }
@@ -507,26 +511,26 @@ void app_main(void)
 
     
     /* Old connect and disconnect loop */
-    while (1) {
-        vTaskDelay(1000 * 10 / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "Disconnecting.");
-        esp_wireguard_disconnect(&ctx);
-        ESP_LOGI(TAG, "Disconnected.");
+    // while (1) {
+    //     vTaskDelay(1000 * 10 / portTICK_PERIOD_MS);
+    //     ESP_LOGI(TAG, "Disconnecting.");
+    //     esp_wireguard_disconnect(&ctx);
+    //     ESP_LOGI(TAG, "Disconnected.");
         
-        vTaskDelay(1000 * 10 / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "Connecting.");
-        err = esp_wireguard_connect(&ctx);
-        if (err != ESP_OK) {
-            ESP_LOGE(TAG, "esp_wireguard_connect: %s", esp_err_to_name(err));
-            goto fail;
-        }
-        while (esp_wireguardif_peer_is_up(&ctx) != ESP_OK) {
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-        ESP_LOGI(TAG, "Peer is up");
+    //     vTaskDelay(1000 * 10 / portTICK_PERIOD_MS);
+    //     ESP_LOGI(TAG, "Connecting.");
+    //     err = esp_wireguard_connect(&ctx);
+    //     if (err != ESP_OK) {
+    //         ESP_LOGE(TAG, "esp_wireguard_connect: %s", esp_err_to_name(err));
+    //         goto fail;
+    //     }
+    //     while (esp_wireguardif_peer_is_up(&ctx) != ESP_OK) {
+    //         vTaskDelay(1000 / portTICK_PERIOD_MS);
+    //     }
+    //     ESP_LOGI(TAG, "Peer is up");
         
-        esp_wireguard_set_default(&ctx);
-    }
+    //     esp_wireguard_set_default(&ctx);
+    // }
 
 fail:
     ESP_LOGE(TAG, "Halting due to error");
