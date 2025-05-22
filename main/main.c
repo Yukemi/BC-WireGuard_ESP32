@@ -340,6 +340,8 @@ static void test_on_ping_end(esp_ping_handle_t hdl, void *args)
     ESP_LOGI(TAG, "%" PRIu32 " packets transmitted, %" PRIu32 " received, time %" PRIu32 "ms", transmitted, received, total_time_ms);
 }
 
+// test
+
 void start_ping()
 {
     ESP_LOGI(TAG, "Initializing ping...");
@@ -383,7 +385,7 @@ static void start_iperf_server()
         .dport = 5201,
         .len_send_buf = 16384,
         .interval = 3,
-        .time = 600,
+        .time = 30,
     };
 
     ESP_ERROR_CHECK(iperf_start(&iperf_cfg));
