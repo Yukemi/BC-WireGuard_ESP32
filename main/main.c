@@ -340,8 +340,6 @@ static void test_on_ping_end(esp_ping_handle_t hdl, void *args)
     ESP_LOGI(TAG, "%" PRIu32 " packets transmitted, %" PRIu32 " received, time %" PRIu32 "ms", transmitted, received, total_time_ms);
 }
 
-// test
-
 void start_ping()
 {
     ESP_LOGI(TAG, "Initializing ping...");
