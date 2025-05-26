@@ -1,3 +1,7 @@
-[submodule "components/iperf"]
-	path = components/iperf
-	url = https://github.com/espressif/iperf-cmd
+# [submodule "components/iperf"]
+# 	path = components/iperf
+# 	url = https://github.com/espressif/iperf-cmd
+
+[submodule "components/ESP32_Task_Monitor"]
+	path = components/ESP32_Task_Monitor
+	url = https://github.com/VPavlusha/ESP32_Task_Monitor
