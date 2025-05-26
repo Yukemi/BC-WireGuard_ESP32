@@ -252,9 +252,7 @@ static esp_err_t iperf_run_tcp_server(void)
     int opt = 1;
     int err = 0;
     esp_err_t ret = ESP_OK;
-
     struct timeval timeout = { 0 };
-
     socklen_t addr_len = sizeof(struct sockaddr);
     struct sockaddr_storage listen_addr = { 0 };
 #if IPERF_IPV4_ENABLED

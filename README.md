@@ -1,24 +1,34 @@
-# demo example
+# Wireguard performance monitoring for ESP32
 
-## What the example does
+## Project description
 
-The example connects to a WireGuard server. When the link is up, the device
-listens for a iperf test, and reports network bandwidth. The session resets after specified ammount of time.
-(60 seconds by default, can be adjusted in menuconfig)
+The project sets up a WireGuard connection, and a Iperf server to test network speed within and outside the WireGuard tunnel between the ESP32 and a client machine.
+
+The project includes a Task Monitor to report runtime, and stack size of each running task, along with total free heap size and temperature.
+
+The Iperf socket closes after a single test has been perfomed, because of that
+it runs on limited time then restarts (adjustable in `menuconfig`)
+
+The project is based on the example demo of [`WireGuard for ESP32-S3`](https://github.com/trombik/esp_wireguard/tree/main/examples/demo)
 
 ## Requirements
 
 * An ESP32
 * WiFi network
-* [`wireguard-tools`](https://github.com/WireGuard/wireguard-tools)
+* [`WireGuard for Windows`](https://www.wireguard.com/install/)
 * A WireGuard server
 * Compatible version of [`iperf`](https://sourceforge.net/projects/iperf2/) (v2.x.x is recommended)
 
-## Generating keys
+## Getting Started
 
-```console
-wg genkey | tee private.key | wg pubkey > public.key
+Clone the repository
+```bash
+git clone https://github.com/Yukemi/BC-WireGuard_ESP32.git
 ```
+
+
+
+
 
 ## Log
 
