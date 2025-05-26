@@ -27,7 +27,7 @@
 #include "sync_time.h"
 
 /* Task monitor */
-#include "task_monitor.h"
+// #include "task_monitor.h"
 
 /* Iperf */
 #include "iperf.h"
@@ -433,7 +433,7 @@ void app_main(void)
     }
 
     /* Task Monitor */
-    task_monitor();
+    // task_monitor();
 
     /* Endless loop to avoid crashing */
     while (1) {

@@ -8,7 +8,7 @@ menu "Task Monitor Project Configuration"
             (see configUSE_TRACE_FACILITY documentation for more details).
 
     config FREERTOS_GENERATE_RUN_TIME_STATS
-        bool "Enable trace facility"
+        bool "Generate Runtime Stats"
         default y
         help
             Enables collection of run time statistics for each task
