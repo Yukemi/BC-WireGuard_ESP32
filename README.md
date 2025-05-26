@@ -34,9 +34,11 @@ wg genkey | tee private.key | wg pubkey > public.key
 wg genpsk > preshared.key
 ```
 
-### Clone the repository
+### Clone the repository and update submodules
 ```bash
 git clone https://github.com/Yukemi/BC-WireGuard_ESP32.git
+cd BC-WireGuard_ESP32
+git submodule update --init --recursive
 ```
 
 ### Set target

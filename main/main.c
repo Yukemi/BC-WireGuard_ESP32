@@ -26,9 +26,6 @@
 #include <esp_wireguard.h>
 #include "sync_time.h"
 
-/* Task monitor */
-#include "task_monitor.h"
-
 /* Iperf */
 #include "iperf.h"
 
@@ -431,9 +428,6 @@ void app_main(void)
             ESP_LOGI(TAG, "Peer is down");
         }
     }
-
-    /* Task Monitor */
-    task_monitor();
 
     /* Endless loop to avoid crashing */
     while (1) {
