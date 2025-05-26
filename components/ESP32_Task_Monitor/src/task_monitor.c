@@ -11,12 +11,6 @@
 #include "esp_timer.h"
 #include "sdkconfig.h"
 
-// Incl. Temperature
-#include "esp_log.h"
-#include "driver/temperature_sensor.h"
-
-static const char *TAG = "temp_monitor";
-
 #if !defined(CONFIG_FREERTOS_USE_TRACE_FACILITY) || !defined(CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS)
     #error "configUSE_TRACE_FACILITY and configGENERATE_RUN_TIME_STATS must be defined as 1 in FreeRTOSConfig.h!"
 #endif
@@ -143,18 +137,6 @@ static const char* task_state_to_string(eTaskState state)
 
 static void task_status_monitor_task(void *params)
 {
-    // Init. Temperature
-    ESP_LOGI(TAG, "Install temperature sensor, expected temp ranger range: 10~50 ℃");
-    temperature_sensor_handle_t temp_sensor = NULL;
-    temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
-    ESP_ERROR_CHECK(temperature_sensor_install(&temp_sensor_config, &temp_sensor));
-
-    ESP_LOGI(TAG, "Enable temperature sensor");
-    ESP_ERROR_CHECK(temperature_sensor_enable(temp_sensor));
-
-    ESP_LOGI(TAG, "Read temperature");
-    float tsens_value;
-
     while (true) {
         UBaseType_t number_of_tasks = uxTaskGetNumberOfTasks();
         TaskStatus_t *p_tasks_status_array = pvPortMalloc(number_of_tasks * sizeof(TaskStatus_t));
@@ -168,15 +150,15 @@ static void task_status_monitor_task(void *params)
 
                 printf("I (%lu) tm: " BLUE "%-18.16s %-11.10s %-6.5s %-8.8s %-10.9s %-11.10s %-15.15s %-s"
                     RESET_COLOR,
-                    get_current_time_ms(),  
-                    "TASK NAME:",           
-                    "STATE:",               
-                    "CORE:",                
-                    "NUMBER:",              
-                    "PRIORITY:",            
-                    "STACK_MIN:",           
-                    "RUNTIME, µs:",         
-                    "RUNTIME, %:\n"         
+                    get_current_time_ms(),
+                    "TASK NAME:",
+                    "STATE:",
+                    "CORE:",
+                    "NUMBER:",
+                    "PRIORITY:",
+                    "STACK_MIN:",
+                    "RUNTIME, µs:",
+                    "RUNTIME, %:\n"
                 );
 
                 for (size_t i = 0; i < number_of_tasks; ++i) {
@@ -199,14 +181,7 @@ static void task_status_monitor_task(void *params)
                        (p_tasks_status_array[i].ulRunTimeCounter * 100.0) / total_run_time);
                 }
 
-
-                // Get Temperature
-                ESP_ERROR_CHECK(temperature_sensor_get_celsius(temp_sensor, &tsens_value));
-                ESP_LOGI(TAG, "Temperature value %.02f °C", tsens_value);
-
-                
-                // printf("I (%lu) tm: " YELLOW "Total heap free size:   " GREEN "%d" YELLOW " bytes\n" RESET_COLOR,
-                printf("I (%lu) tm: " YELLOW "Total heap size:        " GREEN "%d" YELLOW " bytes\n" RESET_COLOR,
+                printf("I (%lu) tm: " YELLOW "Total heap free size:   " GREEN "%d" YELLOW " bytes\n" RESET_COLOR,
                     get_current_time_ms(), heap_caps_get_total_size(MALLOC_CAP_DEFAULT));
 
                 printf("I (%lu) tm: " YELLOW "Current heap free size: " GREEN "%d" YELLOW " bytes (" GREEN "%.2f"
@@ -223,8 +198,6 @@ static void task_status_monitor_task(void *params)
                 uint64_t current_time = esp_timer_get_time();
                 printf("I (%lu) tm: " YELLOW "System UpTime: " GREEN "%llu" YELLOW " µs (" GREEN "%llu" YELLOW
                     " seconds)\n\n" RESET_COLOR, get_current_time_ms(), current_time, current_time / 1000000);
-                    
-
             }
             vPortFree(p_tasks_status_array);
         } else {

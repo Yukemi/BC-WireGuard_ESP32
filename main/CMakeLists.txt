@@ -12,4 +12,5 @@ idf_component_register(SRCS
                         nvs_flash                                               #wireguard
                         esp_driver_tsens                                        #Temp sensor
                         console                                                 #iperf
+                        esp_timer                                               #task monitor
                     )
