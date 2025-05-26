@@ -120,7 +120,7 @@ CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS=y
 # end of Kernel
 ```
 
-## Log
+## Log output example
 
 ```console
 
