@@ -37,6 +37,15 @@
 #define EXAMPLE_ESP_WIFI_PASS      CONFIG_ESP_WIFI_PASSWORD
 #define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
 
+/* Iperf Configuration Defines */
+#define IPERF_SOURCE_IP_ADDRESS     CONFIG_IPERF_SOURCE_IP_ADDRESS  
+#define IPERF_SOURCE_IP_PORT        CONFIG_IPERF_SOURCE_IP_PORT     
+#define IPERF_DESTINATION_IP_PORT   CONFIG_IPERF_DESTINATION_IP_PORT
+#define IPERF_LEN_SEND_BUFFER       CONFIG_IPERF_LEN_SEND_BUFFER    
+#define IPERF_INTERVAL              CONFIG_IPERF_INTERVAL           
+#define IPERF_TIME                  CONFIG_IPERF_TIME               
+#define IPERF_LOOP_RESET_ADD        CONFIG_IPERF_LOOP_RESET_ADD     
+
 #if defined(CONFIG_IDF_TARGET_ESP8266)
 #include <esp_netif.h>
 #elif ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 2, 0)
@@ -309,14 +318,14 @@ static void start_iperf_server()
     ESP_LOGI(TAG, "Starting iperf server");
 
     iperf_cfg_t iperf_cfg = {
-        .type = IPERF_IP_TYPE_IPV4,
-        .flag = IPERF_FLAG_SERVER,
-        .source_ip4 = 0,
-        .sport = 5201,
-        .dport = 5201,
-        .len_send_buf = 16384,
-        .interval = 3,
-        .time = 600,
+        .type           = IPERF_IP_TYPE_IPV4,
+        .flag           = IPERF_FLAG_SERVER,
+        .source_ip4     = IPERF_SOURCE_IP_ADDRESS,
+        .sport          = IPERF_SOURCE_IP_PORT,
+        .dport          = IPERF_DESTINATION_IP_PORT,
+        .len_send_buf   = IPERF_LEN_SEND_BUFFER,
+        .interval       = IPERF_INTERVAL,
+        .time           = IPERF_TIME,
     };
 
     ESP_ERROR_CHECK(iperf_start(&iperf_cfg));
@@ -344,10 +353,9 @@ static void iperf_server_task(void *pvParameters)
     if (bits & WIFI_CONNECTED_BIT) {
         start_iperf_server();
         while (1) {
-            vTaskDelay(1000 * 60 / portTICK_PERIOD_MS);
+            vTaskDelay(1000 * (IPERF_TIME + IPERF_LOOP_RESET_ADD) / portTICK_PERIOD_MS);
             ESP_LOGI(TAG, "Stopping Iperf");
             iperf_stop();
-            // vTaskDelay(portMAX_DELAY);
             vTaskDelay(1000 * 1 / portTICK_PERIOD_MS);
             ESP_LOGI(TAG, "Starting Iperf");
             start_iperf_server();
@@ -433,7 +441,7 @@ void app_main(void)
     }
 
 
-    
+
 fail:
     ESP_LOGE(TAG, "Halting due to error");
     while (1) {
