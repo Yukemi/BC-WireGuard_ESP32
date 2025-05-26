@@ -1,0 +1,3 @@
+[submodule "components/ESP32_Task_Monitor"]
+	path = components/ESP32_Task_Monitor
+	url = https://github.com/VPavlusha/ESP32_Task_Monitor.git
