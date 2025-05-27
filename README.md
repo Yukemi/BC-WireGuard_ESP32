@@ -49,13 +49,18 @@ idf.py set-target <target>
 ```bash
 idf.py menuconfig
 ```
-Remember to enable:
-* `USE_TRACE_FACILITY`
-* `USE_STATS_FORMATTING_FUNCTIONS`
-* `VTASKLIST_INCLUDE_COREID`
-* `GENERATE_RUN_TIME_STATS`
+Head to `Component config` -> `FreeRTOS` -> `Kernel`
 
-for `ESP32_Task_Monitor` to work, See [Project Configuration Example](#project-configuration-example) for more information
+Enable for `ESP32_Task_Monitor` to work:
+
+* `configUSE_TRACE_FACILITY`
+* `configUSE_STATS_FORMATTING_FUNCTIONS`
+* `Enable display of xCoreID in vTaskList`
+* `configGENERATE_RUN_TIME_STATS`
+
+Then set up the rest in `WireGuard Configuration` and `Iperf configuration`
+
+See [Project Configuration Example](#project-configuration-example) for more information
 
 ### Build, flash, and monitor the project
 ```bash
