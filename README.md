@@ -62,8 +62,9 @@ Enable PPP Support in `Component Config` -> `LWIP` -> `Enable PPP Support`
 
 Then set up the rest in `WireGuard Configuration` and `Iperf configuration`
 
-Original socket timeouts in Iperf's Component Config are not used to avoid
-socket closing before the reset runs out.
+Adjust socket timeouts in `Component Config` -> `iperf`, increase the timers to avoid the socket closing up
+- iperf socket TCP/UDP rx timeout in seconds
+- iperf socket TCP tx timeout in seconds
 
 See [Project Configuration Example](#project-configuration-example) for more information
 
