@@ -49,7 +49,13 @@ idf.py set-target <target>
 ```bash
 idf.py menuconfig
 ```
-Remember to enable `USE_TRACE_FACILITY` and `USE_STATS_FORMATTING_FUNCTIONS` for `ESP32_Task_Monitor` to work See [Project Configuration Example](#project-configuration-example) for more information
+Remember to enable:
+* `USE_TRACE_FACILITY`
+* `USE_STATS_FORMATTING_FUNCTIONS`
+* `VTASKLIST_INCLUDE_COREID`
+* `GENERATE_RUN_TIME_STATS`
+
+for `ESP32_Task_Monitor` to work, See [Project Configuration Example](#project-configuration-example) for more information
 
 ### Build, flash, and monitor the project
 ```bash
@@ -116,6 +122,10 @@ CONFIG_IPERF_LOOP_RESET_ADD=30
 ...
 CONFIG_FREERTOS_USE_TRACE_FACILITY=y
 CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS=y
+# CONFIG_FREERTOS_USE_LIST_DATA_INTEGRITY_CHECK_BYTES is not set
+CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID=y
+CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y
+CONFIG_FREERTOS_RUN_TIME_COUNTER_TYPE_U32=y
 ...
 # end of Kernel
 ```
