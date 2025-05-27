@@ -58,7 +58,12 @@ Enable for `ESP32_Task_Monitor` to work:
 * `Enable display of xCoreID in vTaskList`
 * `configGENERATE_RUN_TIME_STATS`
 
+Enable PPP Support in `Component Config` -> `LWIP` -> `Enable PPP Support`
+
 Then set up the rest in `WireGuard Configuration` and `Iperf configuration`
+
+Original socket timeouts in Iperf's Component Config are not used to avoid
+socket closing before the reset runs out.
 
 See [Project Configuration Example](#project-configuration-example) for more information
 
