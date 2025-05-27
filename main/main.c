@@ -376,6 +376,8 @@ void app_main(void)
     char strftime_buf[64];
     wireguard_ctx_t ctx = {0};
 
+
+
     esp_log_level_set("esp_wireguard", ESP_LOG_DEBUG);
     esp_log_level_set("wireguardif", ESP_LOG_DEBUG);
     esp_log_level_set("wireguard", ESP_LOG_DEBUG);
