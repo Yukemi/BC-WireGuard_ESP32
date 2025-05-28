@@ -302,7 +302,7 @@ I (126427) iperf: DONE.IPERF_STOP,OK.
 I (127427) demo: Starting Iperf
 I (127427) demo: Starting iperf server
 I (127427) iperf: Socket created
-I (128337) iperf: accept: 192.168.0.107,54640
+I (128337) iperf: accept:...,54640
 
 I (152750) tm: TASK NAME:         STATE:      CORE:  NUMBER:  PRIORITY:  STACK_MIN:  RUNTIME, µs:   RUNTIME, %:
 I (152750) tm: IDLE0              Ready       0      5        0          688         140926219      92.242    
