@@ -74,9 +74,46 @@ menu "WireGuard Configuration"
             A seconds interval, between 1 and 65535 inclusive, of how often to
             send an authenticated empty packet to the peer for the purpose of
             keeping a stateful firewall or NAT mapping valid persistently
-    config EXAMPLE_PING_ADDRESS
-        string "Target IP address or name"
-        default "192.168.4.254"
+endmenu
+
+menu "Iperf configuration"
+    config IPERF_SOURCE_IP_ADDRESS
+        int "Source IP address"
+        default 0 
         help
-            Target IP address to send ICMP echo requests.
+            IP address of the iperf client for the socket to listen to. 
+            (0 means the server listens to any connection)
+    config IPERF_SOURCE_IP_PORT
+        int "Source IP port"
+        default 5201
+        help
+            Port of the client's IP address the test is running on.
+    config IPERF_DESTINATION_IP_PORT
+        int "Destination IP port"
+        default 5201
+        help
+            Port of the server's IP address the test is running on.
+    config IPERF_LEN_SEND_BUFFER
+        int "Send Buffer Length"
+        default 16384
+        help
+            Adjusts send buffer length in bytes.
+    config IPERF_INTERVAL
+        int "Report Interval"
+        default 3
+        help
+            Adjusts interval at which iperf reports test results in seconds.
+    config IPERF_TIME
+        int "Total Send Time"
+        default 30
+        help
+            Adjusts duration of the iperf test.
+    config IPERF_LOOP_RESET_ADD
+        int "Additional Test Loop Window Duration"
+        default 30
+        help
+            Adjusts additional time before the iperf task resets
+            This is done because original iperf library supports
+            only one test, then closes up the socket, so the example
+            script resets the task to allow a new test.
 endmenu

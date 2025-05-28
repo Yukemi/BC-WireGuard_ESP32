@@ -21,7 +21,6 @@
 #include <esp_wifi.h>
 #include <nvs_flash.h>
 #include <lwip/netdb.h>
-#include <ping/ping_sock.h>
 
 /* WireGuard */
 #include <esp_wireguard.h>
@@ -38,6 +37,15 @@
 #define EXAMPLE_ESP_WIFI_PASS      CONFIG_ESP_WIFI_PASSWORD
 #define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
 
+/* Iperf Configuration Defines */
+#define IPERF_SOURCE_IP_ADDRESS     CONFIG_IPERF_SOURCE_IP_ADDRESS  
+#define IPERF_SOURCE_IP_PORT        CONFIG_IPERF_SOURCE_IP_PORT     
+#define IPERF_DESTINATION_IP_PORT   CONFIG_IPERF_DESTINATION_IP_PORT
+#define IPERF_LEN_SEND_BUFFER       CONFIG_IPERF_LEN_SEND_BUFFER    
+#define IPERF_INTERVAL              CONFIG_IPERF_INTERVAL           
+#define IPERF_TIME                  CONFIG_IPERF_TIME               
+#define IPERF_LOOP_RESET_ADD        CONFIG_IPERF_LOOP_RESET_ADD     
+
 #if defined(CONFIG_IDF_TARGET_ESP8266)
 #include <esp_netif.h>
 #elif ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 2, 0)
@@ -45,6 +53,7 @@
 #else
 #include <esp_netif.h>
 #endif
+
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -54,6 +63,7 @@ static EventGroupHandle_t s_wifi_event_group;
  * - we failed to connect after the maximum amount of retries */
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
+
 
 static const char *TAG = "demo";
 static int s_retry_num = 0;
@@ -65,15 +75,12 @@ static esp_err_t wireguard_setup(wireguard_ctx_t* ctx);
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 static esp_err_t wifi_init_sta(void);
 
-/* Ping test definitions */
-static void test_on_ping_success(esp_ping_handle_t hdl, void *args);
-static void test_on_ping_timeout(esp_ping_handle_t hdl, void *args);
-static void test_on_ping_end(esp_ping_handle_t hdl, void *args);
-void start_ping();
 
 /* Iperf definitions*/
 static void start_iperf_server(void);
 static void iperf_server_task(void *pvParameters);
+
+
 
 static esp_err_t wireguard_setup(wireguard_ctx_t* ctx)
 {
@@ -304,71 +311,6 @@ static esp_err_t wifi_init_sta(void)
     return wifi_init_netif();
 #endif
 }
-static void test_on_ping_success(esp_ping_handle_t hdl, void *args)
-{
-    uint8_t ttl;
-    uint16_t seqno;
-    uint32_t elapsed_time, recv_len;
-    ip_addr_t target_addr;
-    esp_ping_get_profile(hdl, ESP_PING_PROF_SEQNO, &seqno, sizeof(seqno));
-    esp_ping_get_profile(hdl, ESP_PING_PROF_TTL, &ttl, sizeof(ttl));
-    esp_ping_get_profile(hdl, ESP_PING_PROF_IPADDR, &target_addr, sizeof(target_addr));
-    esp_ping_get_profile(hdl, ESP_PING_PROF_SIZE, &recv_len, sizeof(recv_len));
-    esp_ping_get_profile(hdl, ESP_PING_PROF_TIMEGAP, &elapsed_time, sizeof(elapsed_time));
-    ESP_LOGI(TAG, "%" PRIu32 " bytes from %s icmp_seq=%" PRIu16 " ttl=%" PRIi8 " time=%" PRIu32 " ms",
-           recv_len, ipaddr_ntoa(&target_addr), seqno, ttl, elapsed_time);
-}
-
-static void test_on_ping_timeout(esp_ping_handle_t hdl, void *args)
-{
-    uint16_t seqno;
-    ip_addr_t target_addr;
-    esp_ping_get_profile(hdl, ESP_PING_PROF_SEQNO, &seqno, sizeof(seqno));
-    esp_ping_get_profile(hdl, ESP_PING_PROF_IPADDR, &target_addr, sizeof(target_addr));
-    ESP_LOGI(TAG, "From %s icmp_seq=%" PRIu16 " timeout", ipaddr_ntoa(&target_addr), seqno);
-}
-
-static void test_on_ping_end(esp_ping_handle_t hdl, void *args)
-{
-    uint32_t transmitted;
-    uint32_t received;
-    uint32_t total_time_ms;
-
-    esp_ping_get_profile(hdl, ESP_PING_PROF_REQUEST, &transmitted, sizeof(transmitted));
-    esp_ping_get_profile(hdl, ESP_PING_PROF_REPLY, &received, sizeof(received));
-    esp_ping_get_profile(hdl, ESP_PING_PROF_DURATION, &total_time_ms, sizeof(total_time_ms));
-    ESP_LOGI(TAG, "%" PRIu32 " packets transmitted, %" PRIu32 " received, time %" PRIu32 "ms", transmitted, received, total_time_ms);
-}
-
-void start_ping()
-{
-    ESP_LOGI(TAG, "Initializing ping...");
-    /* convert URL to IP address */
-    ip_addr_t target_addr;
-    struct addrinfo *res = NULL;
-    struct addrinfo hint;
-    memset(&hint, 0, sizeof(hint));
-    memset(&target_addr, 0, sizeof(target_addr));
-    ESP_ERROR_CHECK(lwip_getaddrinfo(CONFIG_EXAMPLE_PING_ADDRESS, NULL, &hint, &res) == 0 ? ESP_OK : ESP_FAIL);
-    struct in_addr addr4 = ((struct sockaddr_in *) (res->ai_addr))->sin_addr;
-    inet_addr_to_ip4addr(ip_2_ip4(&target_addr), &addr4);
-    lwip_freeaddrinfo(res);
-    ESP_LOGI(TAG, "ICMP echo target: %s", CONFIG_EXAMPLE_PING_ADDRESS);
-    esp_ping_config_t ping_config = ESP_PING_DEFAULT_CONFIG();
-    ping_config.target_addr = target_addr;          // target IP address
-    ping_config.count = ESP_PING_COUNT_INFINITE;    // ping in infinite mode, esp_ping_stop can stop it
-
-    /* set callback functions */
-    esp_ping_callbacks_t cbs;
-    cbs.on_ping_success = test_on_ping_success;
-    cbs.on_ping_timeout = test_on_ping_timeout;
-    cbs.on_ping_end = test_on_ping_end;
-    cbs.cb_args = NULL;
-
-    esp_ping_handle_t ping;
-    ESP_ERROR_CHECK(esp_ping_new_session(&ping_config, &cbs, &ping));
-    esp_ping_start(ping);
-}
 
 /* iperf server */
 static void start_iperf_server()
@@ -376,14 +318,14 @@ static void start_iperf_server()
     ESP_LOGI(TAG, "Starting iperf server");
 
     iperf_cfg_t iperf_cfg = {
-        .type = IPERF_IP_TYPE_IPV4,
-        .flag = IPERF_FLAG_SERVER,
-        .source_ip4 = 0,
-        .sport = 5201,
-        .dport = 5201,
-        .len_send_buf = 16384,
-        .interval = 3,
-        .time = 600,
+        .type           = IPERF_IP_TYPE_IPV4,
+        .flag           = IPERF_FLAG_SERVER,
+        .source_ip4     = IPERF_SOURCE_IP_ADDRESS,
+        .sport          = IPERF_SOURCE_IP_PORT,
+        .dport          = IPERF_DESTINATION_IP_PORT,
+        .len_send_buf   = IPERF_LEN_SEND_BUFFER,
+        .interval       = IPERF_INTERVAL,
+        .time           = IPERF_TIME,
     };
 
     ESP_ERROR_CHECK(iperf_start(&iperf_cfg));
@@ -411,10 +353,9 @@ static void iperf_server_task(void *pvParameters)
     if (bits & WIFI_CONNECTED_BIT) {
         start_iperf_server();
         while (1) {
-            vTaskDelay(1000 * 60 / portTICK_PERIOD_MS);
+            vTaskDelay(1000 * (IPERF_TIME + IPERF_LOOP_RESET_ADD) / portTICK_PERIOD_MS);
             ESP_LOGI(TAG, "Stopping Iperf");
             iperf_stop();
-            // vTaskDelay(portMAX_DELAY);
             vTaskDelay(1000 * 1 / portTICK_PERIOD_MS);
             ESP_LOGI(TAG, "Starting Iperf");
             start_iperf_server();
@@ -435,6 +376,8 @@ void app_main(void)
     char strftime_buf[64];
     wireguard_ctx_t ctx = {0};
 
+
+
     esp_log_level_set("esp_wireguard", ESP_LOG_DEBUG);
     esp_log_level_set("wireguardif", ESP_LOG_DEBUG);
     esp_log_level_set("wireguard", ESP_LOG_DEBUG);
@@ -449,15 +392,11 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(err);
 
-
-
     /* Create s_wifi_event_group before working with it */
     s_wifi_event_group = xEventGroupCreate();
     configASSERT(s_wifi_event_group != NULL);
     ESP_LOGI(TAG, "Event group handle created");
     ESP_LOGI(TAG, "Event group handle: %p", s_wifi_event_group);
-
-
 
     err = wifi_init_sta();
     if (err != ESP_OK) {
@@ -467,7 +406,6 @@ void app_main(void)
 
     /* iperf initialization */
     xTaskCreate(iperf_server_task, "iperf_server", 4096, NULL, 3, NULL);
-
 
     obtain_time();
     time(&now);
@@ -484,8 +422,6 @@ void app_main(void)
         goto fail;
     }
 
-
-
     // Waiting for peer to be up
     while (1) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -498,9 +434,6 @@ void app_main(void)
         }
     }
 
-    /* Ping testing */
-    // start_ping();
-
     /* Task Monitor */
     task_monitor();
 
@@ -509,28 +442,7 @@ void app_main(void)
         vTaskDelay(1000 * 10 / portTICK_PERIOD_MS);
     }
 
-    
-    /* Old connect and disconnect loop */
-    // while (1) {
-    //     vTaskDelay(1000 * 10 / portTICK_PERIOD_MS);
-    //     ESP_LOGI(TAG, "Disconnecting.");
-    //     esp_wireguard_disconnect(&ctx);
-    //     ESP_LOGI(TAG, "Disconnected.");
-        
-    //     vTaskDelay(1000 * 10 / portTICK_PERIOD_MS);
-    //     ESP_LOGI(TAG, "Connecting.");
-    //     err = esp_wireguard_connect(&ctx);
-    //     if (err != ESP_OK) {
-    //         ESP_LOGE(TAG, "esp_wireguard_connect: %s", esp_err_to_name(err));
-    //         goto fail;
-    //     }
-    //     while (esp_wireguardif_peer_is_up(&ctx) != ESP_OK) {
-    //         vTaskDelay(1000 / portTICK_PERIOD_MS);
-    //     }
-    //     ESP_LOGI(TAG, "Peer is up");
-        
-    //     esp_wireguard_set_default(&ctx);
-    // }
+
 
 fail:
     ESP_LOGE(TAG, "Halting due to error");
