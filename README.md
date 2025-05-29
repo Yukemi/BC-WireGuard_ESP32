@@ -19,7 +19,7 @@ The task monitor code is taken from [`ESP32_Task_Monitor`](https://github.com/VP
 
 * An ESP32
 * WiFi network
-* [`WireGuard for Windows`](https://www.wireguard.com/install/)
+* [`WireGuard`](https://www.wireguard.com/install/)
 * A WireGuard server
 * Compatible version of [`iperf`](https://sourceforge.net/projects/iperf2/) (v2.x.x is recommended)
 
